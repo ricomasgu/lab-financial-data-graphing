@@ -2,21 +2,24 @@ const ctx = document.getElementById('myChart').getContext('2d');
 const baseUrl = "http://api.coindesk.com/v1/bpi/historical/close.json";
 
 let myChart;
+const maxSpan = document.getElementById("max");
+const minSpan = document.getElementById("min");
 
-const updateChart = (url) => {
+const updateView = (url) => {
     axios.get(url)
         .then(responseFromApi => {
             const dataFromApi = responseFromApi.data.bpi;
 
-            const labels = Object.keys(dataFromApi);
+            const dataKeys = Object.keys(dataFromApi);
+            const dataValues = Object.values(dataFromApi)
 
             const data = {
-                labels: labels,
+                labels: dataKeys,
                 datasets: [{
                     label: 'My First dataset',
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
-                    data: Object.values(dataFromApi),
+                    data: dataValues,
                 }]
             };
 
@@ -30,11 +33,13 @@ const updateChart = (url) => {
                 myChart.destroy();
             }
             myChart = new Chart(ctx, config);
+            maxSpan.innerHTML = Math.max(...dataValues);
+            minSpan.innerHTML = Math.min(...dataValues);
         })
         .catch(error => console.log(error));
 };
 
-updateChart(baseUrl);
+updateView(baseUrl);
 
 const fromDateInput = document.getElementById("fromDate");
 const toDateInput = document.getElementById("toDate");
@@ -45,21 +50,21 @@ let toDate;
 fromDateInput.addEventListener("change", (event) => {
     fromDate = String(event.target.value);
     if(toDate !== undefined && ( toDate.localeCompare(fromDate) > 0 )){
-        updateChart(`${baseUrl}?start=${fromDate}&end=${toDate}&currency=${currencyInput.value}`);
+        updateView(`${baseUrl}?start=${fromDate}&end=${toDate}&currency=${currencyInput.value}`);
     }
 });
 
 toDateInput.addEventListener("change", (event) => {
     toDate = String(event.target.value);
     if(fromDate !== undefined && ( toDate.localeCompare(fromDate) > 0 )){
-        updateChart(`${baseUrl}?start=${fromDate}&end=${toDate}&currency=${currencyInput.value}`);
+        updateView(`${baseUrl}?start=${fromDate}&end=${toDate}&currency=${currencyInput.value}`);
     }
 });
 
 currencyInput.addEventListener("change", () => {
     if(fromDate === undefined || toDate === undefined || ( toDate.localeCompare(fromDate) < 0 )){
-        updateChart(`${baseUrl}?currency=${currencyInput.value}`);
+        updateView(`${baseUrl}?currency=${currencyInput.value}`);
     } else {
-        updateChart(`${baseUrl}?start=${fromDate}&end=${toDate}&currency=${currencyInput.value}`);
+        updateView(`${baseUrl}?start=${fromDate}&end=${toDate}&currency=${currencyInput.value}`);
     }
 });
